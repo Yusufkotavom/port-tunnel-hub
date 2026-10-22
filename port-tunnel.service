@@ -1,0 +1,14 @@
+[Unit]
+Description=Port Tunnel Hub (Direct Native App)
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/port-tunnel
+ExecStart=/usr/local/bin/node /opt/port-tunnel/server.js
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

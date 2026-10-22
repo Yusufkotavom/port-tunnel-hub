@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Port Tunnel Hub</title>
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: #111827;
+      --border: #1f2937;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --success: #10b981;
+      --danger: #ef4444;
+      --danger-hover: #dc2626;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 16px;
+    }
+    .container {
+      width: 100%;
+      max-width: 860px;
+    }
+    .header {
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .header h1 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .header h1 span {
+      background: linear-gradient(135deg, #60a5fa, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .badge {
+      font-size: 11px;
+      background: #1e293b;
+      color: #94a3b8;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid #334155;
+      font-weight: 500;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      margin-bottom: 20px;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr 1.4fr auto;
+      gap: 12px;
+      align-items: flex-end;
+    }
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .input-group {
+      display: flex;
+      align-items: center;
+      background: #0b1120;
+      border: 1px solid #374151;
+      border-radius: 8px;
+      overflow: hidden;
+      transition: border-color 0.15s;
+    }
+    .input-group:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(59,130,246,0.2);
+    }
+    .input-group input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #fff;
+      padding: 12px;
+      font-size: 16px; /* Prevents auto-zoom in mobile Safari */
+      width: 100%;
+    }
+    .input-suffix {
+      padding: 0 10px;
+      font-size: 12px;
+      color: #6b7280;
+      background: #172033;
+      height: 100%;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      border-left: 1px solid #374151;
+      user-select: none;
+      white-space: nowrap;
+    }
+    button.btn-primary {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0 20px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.05s;
+      white-space: nowrap;
+      height: 46px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    button.btn-primary:hover {
+      background: var(--accent-hover);
+    }
+    button.btn-primary:active {
+      transform: scale(0.98);
+    }
+    .table-card {
+      padding: 0;
+      overflow: hidden;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    th {
+      background: #0e1526;
+      font-size: 12px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+      vertical-align: middle;
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+    tr:hover td {
+      background: #162032;
+    }
+    .domain-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .domain-link {
+      color: #60a5fa;
+      text-decoration: none;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      word-break: break-all;
+    }
+    .domain-link:hover {
+      text-decoration: underline;
+    }
+    .tunnel-desc {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+    .port-tag {
+      font-family: monospace;
+      background: #1e293b;
+      padding: 5px 10px;
+      border-radius: 6px;
+      color: #e2e8f0;
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid #334155;
+      display: inline-block;
+    }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-weight: 500;
+    }
+    .status-pill.online {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+    }
+    .status-pill.offline {
+      background: rgba(156, 163, 175, 0.15);
+      color: #9ca3af;
+    }
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+    .status-pill.online .status-dot { background: #10b981; }
+    .status-pill.offline .status-dot { background: #9ca3af; }
+    .actions {
+      display: flex;
+      gap: 8px;
+    }
+    .btn-action {
+      background: #1f293d;
+      color: #cbd5e1;
+      border: 1px solid #334155;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      min-height: 38px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-action:hover {
+      background: #334155;
+      color: #fff;
+    }
+    .btn-danger {
+      color: #f87171;
+      border-color: #7f1d1d;
+    }
+    .btn-danger:hover {
+      background: var(--danger-hover);
+      color: #fff;
+      border-color: var(--danger-hover);
+    }
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #10b981;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+      z-index: 300;
+      white-space: nowrap;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Modal Styles */
+    .modal-backdrop {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 16px;
+    }
+    .modal-backdrop.active {
+      display: flex;
+    }
+    .modal-box {
+      background: var(--card-bg);
+      border: 1px solid #374151;
+      border-radius: 14px;
+      padding: 24px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      animation: modalIn 0.15s ease-out;
+    }
+    @keyframes modalIn {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .modal-desc {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 18px;
+      line-height: 1.4;
+    }
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 24px;
+    }
+    .meta-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* ======================================================== */
+    /* MOBILE-SPECIFIC STYLES (Cards layout for screens <= 640px) */
+    /* ======================================================== */
+    @media (max-width: 640px) {
+      body {
+        padding: 16px 12px;
+      }
+      .header {
+        margin-bottom: 16px;
+      }
+      .header h1 {
+        font-size: 20px;
+      }
+      .card {
+        padding: 16px;
+        margin-bottom: 16px;
+      }
+      .form-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+      button.btn-primary {
+        width: 100%;
+        height: 48px;
+        font-size: 16px;
+      }
+
+      /* Mobile Card Transformation */
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+      thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+      }
+      tr {
+        padding: 16px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      td {
+        padding: 0;
+        border: none;
+      }
+      .domain-link {
+        font-size: 17px;
+      }
+      .tunnel-desc {
+        font-size: 13px;
+      }
+      .actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        width: 100%;
+        margin-top: 4px;
+      }
+      .btn-action {
+        width: 100%;
+        height: 44px;
+        font-size: 14px;
+      }
+      .modal-box {
+        padding: 20px;
+        border-radius: 16px;
+      }
+      .modal-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .modal-actions button {
+        height: 44px !important;
+        font-size: 14px !important;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🚀 <span>Port Tunnel Hub</span></h1>
+      <div class="badge">Direct Native App • Zero Docker</div>
+    </div>
+
+    <!-- Add Form -->
+    <div class="card">
+      <form id="tunnelForm" class="form-grid" onsubmit="addTunnel(event)">
+        <div class="form-group">
+          <label>Subdomain</label>
+          <div class="input-group">
+            <input type="text" id="subdomainInput" placeholder="misal: 9 atau api" autocomplete="off" autocapitalize="none" required autofocus>
+            <div class="input-suffix">.devk.my.id</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Target Port</label>
+          <div class="input-group">
+            <input type="number" id="portInput" placeholder="misal: 4321" min="1" max="65535" inputmode="numeric" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Deskripsi (Opsional)</label>
+          <div class="input-group">
+            <input type="text" id="descInput" placeholder="misal: Astro Dev / Backend API">
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary">+ Add Tunnel</button>
+      </form>
+    </div>
+
+    <!-- Active Tunnels List -->
+    <div class="card table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>Public URL & Deskripsi</th>
+            <th>Target Port</th>
+            <th>Status Port</th>
+            <th style="text-align: right;">Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tunnelList">
+          <tr>
+            <td colspan="4" class="empty-state">Memuat data tunnel...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div id="editModal" class="modal-backdrop">
+    <div class="modal-box">
+      <div class="modal-title">✏️ Edit Tunnel</div>
+      <div class="modal-desc" id="editModalDesc">Ubah target port atau deskripsi tunnel:</div>
+      <form onsubmit="submitEdit(event)">
+        <input type="hidden" id="editSubdomain">
+        
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label>Target Port</label>
+          <div class="input-group">
+            <input type="number" id="editPortInput" min="1" max="65535" inputmode="numeric" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Deskripsi</label>
+          <div class="input-group">
+            <input type="text" id="editDescInput" placeholder="Catatan/Nama aplikasi">
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-action" onclick="closeEditModal()">Batal</button>
+          <button type="submit" class="btn-primary" style="height: 44px;">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete Modal -->
+  <div id="deleteModal" class="modal-backdrop">
+    <div class="modal-box">
+      <div class="modal-title" style="color: #f87171;">🗑️ Hapus Tunnel?</div>
+      <div class="modal-desc" id="deleteModalDesc">Apakah Anda yakin ingin menghapus tunnel ini?</div>
+      <div class="modal-actions">
+        <button type="button" class="btn-action" onclick="closeDeleteModal()">Batal</button>
+        <button type="button" class="btn-primary" id="confirmDeleteBtn" style="background: #dc2626; height: 44px;">Hapus</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">Berhasil diperbarui!</div>
+
+  <script>
+    let currentDeleteSub = null;
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.innerText = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    async function loadTunnels() {
+      try {
+        const res = await fetch('/api/tunnels');
+        const data = await res.json();
+        const tbody = document.getElementById('tunnelList');
+
+        if (data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Belum ada tunnel aktif. Silakan tambahkan di atas.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = data.map(t => `
+          <tr>
+            <td>
+              <div class="domain-cell">
+                <a href="https://${t.fullHost}" target="_blank" class="domain-link">
+                  ${t.fullHost} ↗
+                </a>
+                ${t.description ? `<span class="tunnel-desc">📝 ${escapeHtml(t.description)}</span>` : ''}
+              </div>
+            </td>
+            <td>
+              <div class="meta-row">
+                <span class="port-tag">:${t.port}</span>
+                <span class="status-pill ${t.isListening ? 'online' : 'offline'}">
+                  <span class="status-dot"></span>
+                  ${t.isListening ? 'Listening (Aktif)' : 'Offline'}
+                </span>
+              </div>
+            </td>
+            <td style="display: none;"></td>
+            <td style="text-align: right;">
+              <div class="actions">
+                <button class="btn-action" onclick="openEditModal('${t.subdomain}', ${t.port}, '${escapeHtml(t.description || '')}')">✏️ Edit</button>
+                <button class="btn-action btn-danger" onclick="openDeleteModal('${t.subdomain}', '${t.fullHost}')">🗑️ Hapus</button>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    async function addTunnel(e) {
+      e.preventDefault();
+      const sub = document.getElementById('subdomainInput').value.trim();
+      const port = document.getElementById('portInput').value.trim();
+      const desc = document.getElementById('descInput').value.trim();
+      if (!sub || !port) return;
+
+      const res = await fetch('/api/tunnels', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subdomain: sub, port: port, description: desc, domain: 'devk.my.id' })
+      });
+
+      if (res.ok) {
+        showToast(`Tunnel https://${sub}.devk.my.id aktif!`);
+        document.getElementById('subdomainInput').value = '';
+        document.getElementById('portInput').value = '';
+        document.getElementById('descInput').value = '';
+        loadTunnels();
+      } else {
+        alert('Gagal menambahkan tunnel');
+      }
+    }
+
+    // Modal Edit
+    function openEditModal(subdomain, currentPort, currentDesc) {
+      document.getElementById('editSubdomain').value = subdomain;
+      document.getElementById('editPortInput').value = currentPort;
+      document.getElementById('editDescInput').value = currentDesc || '';
+      document.getElementById('editModalDesc').innerText = `Edit konfigurasi untuk ${subdomain}.devk.my.id:`;
+      document.getElementById('editModal').classList.add('active');
+      document.getElementById('editPortInput').focus();
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModal').classList.remove('active');
+    }
+
+    async function submitEdit(e) {
+      e.preventDefault();
+      const sub = document.getElementById('editSubdomain').value;
+      const port = document.getElementById('editPortInput').value;
+      const desc = document.getElementById('editDescInput').value;
+
+      const res = await fetch('/api/tunnels', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          subdomain: sub, 
+          port: parseInt(port, 10),
+          description: desc
+        })
+      });
+
+      if (res.ok) {
+        closeEditModal();
+        showToast(`Tunnel ${sub} berhasil diperbarui!`);
+        loadTunnels();
+      } else {
+        alert('Gagal memperbarui tunnel');
+      }
+    }
+
+    // Modal Delete
+    function openDeleteModal(subdomain, fullHost) {
+      currentDeleteSub = subdomain;
+      document.getElementById('deleteModalDesc').innerText = `Hapus tunnel ${fullHost}?`;
+      document.getElementById('deleteModal').classList.add('active');
+    }
+
+    function closeDeleteModal() {
+      currentDeleteSub = null;
+      document.getElementById('deleteModal').classList.remove('active');
+    }
+
+    document.getElementById('confirmDeleteBtn').onclick = async function() {
+      if (!currentDeleteSub) return;
+      const sub = currentDeleteSub;
+
+      const res = await fetch(`/api/tunnels?subdomain=${encodeURIComponent(sub)}`, {
+        method: 'DELETE'
+      });
+
+      if (res.ok) {
+        closeDeleteModal();
+        showToast(`Tunnel ${sub} berhasil dihapus.`);
+        loadTunnels();
+      } else {
+        alert('Gagal menghapus tunnel');
+      }
+    };
+
+    // Close on ESC or backdrop click
+    window.onclick = function(e) {
+      if (e.target.classList.contains('modal-backdrop')) {
+        closeEditModal();
+        closeDeleteModal();
+      }
+    };
+    window.onkeydown = function(e) {
+      if (e.key === 'Escape') {
+        closeEditModal();
+        closeDeleteModal();
+      }
+    };
+
+    loadTunnels();
+    setInterval(loadTunnels, 5000);
+  </script>
+</body>
+</html>

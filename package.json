@@ -1,0 +1,19 @@
+{
+  "name": "port-tunnel-hub",
+  "version": "1.0.0",
+  "description": "Ultra-lightweight, native Web UI to expose and route arbitrary local ports to subdomains instantly via Traefik (Zero Docker overhead).",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "tunnel",
+    "port-forwarding",
+    "reverse-proxy",
+    "traefik",
+    "dokploy",
+    "subdomain"
+  ],
+  "author": "Yusuf Bahtiyar",
+  "license": "MIT"
+}
